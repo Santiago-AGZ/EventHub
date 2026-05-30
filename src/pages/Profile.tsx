@@ -6,7 +6,8 @@ import { toast } from 'sonner'
 import { User, Mail, Shield, Award, Edit3, Save, LogOut, Calendar, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useEvents } from '../hooks/useEvents'
-import { profileSchema, ProfileFormData } from '../schemas/profileSchema'
+import { profileSchema } from '../schemas/profileSchema'
+import type { ProfileFormData } from '../schemas/profileSchema'
 import { useAuthStore } from '../stores/authStore'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -163,7 +164,7 @@ export function Profile() {
               {isEditing ? 'Cancelar' : 'Editar Perfil'}
             </Button>
             <Button
-              variant="error"
+              variant="danger"
               onClick={handleLogout}
               className="bg-red-500/80 hover:bg-red-600 text-white border-none shadow-md"
             >

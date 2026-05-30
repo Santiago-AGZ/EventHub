@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, Mail, Github, Heart } from 'lucide-react'
+import { Calendar, Mail, Code, Heart } from 'lucide-react'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -57,7 +57,7 @@ export function Footer() {
               </li>
               <li>
                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors">
-                  <Github size={14} />
+                  <Code size={14} />
                   Repositorio GitHub
                 </a>
               </li>

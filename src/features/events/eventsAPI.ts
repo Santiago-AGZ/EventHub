@@ -1,5 +1,5 @@
 import { supabase } from '../../services/supabase'
-import { Evento } from '../../lib/constants'
+import type { Evento } from '../../lib/constants'
 
 export async function fetchEvents() {
   const { data, error } = await supabase

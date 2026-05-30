@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { Evento, INITIAL_MOCK_EVENTS } from '../lib/constants'
+import type { Evento } from '../lib/constants'
+import { INITIAL_MOCK_EVENTS } from '../lib/constants'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 
 interface EventStoreState {

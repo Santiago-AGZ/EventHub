@@ -63,11 +63,11 @@ export const eventSchema = z.object({
   ubicacion: z
     .string()
     .min(5, { message: "La ubicación debe detallar el salón, auditorio o enlace (mín. 5 letras)." }),
-  categoria: z.enum(["Tecnología", "Educación", "Deportes", "Música"], {
-    errorMap: () => ({ message: "Seleccione una categoría válida." }),
+  categoria: z.enum(["Tecnología", "Educación", "Deportes", "Música"] as const, {
+    error: () => ({ message: "Seleccione una categoría válida." }),
   }),
   cupos_totales: z
-    .number({ invalid_type_error: "Ingrese un número válido de cupos." })
+    .number({ message: "Ingrese un número válido de cupos." })
     .int()
     .positive({ message: "Los cupos deben ser un número positivo mayor a 0." })
     .max(5000, { message: "El aforo máximo recomendado es de 5000 asistentes." }),

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Calendar, Clock, MapPin, Users } from 'lucide-react'
-import { Evento } from '../../lib/constants'
+import type { Evento } from '../../lib/constants'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'

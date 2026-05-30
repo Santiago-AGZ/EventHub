@@ -7,7 +7,7 @@ import { useAuthStore } from '../stores/authStore'
 import { EventForm } from '../components/events/EventForm'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
-import { EventFormData } from '../schemas/eventSchema'
+import type { EventFormData } from '../schemas/eventSchema'
 
 const categoryColors: Record<string, 'primary' | 'success' | 'warning' | 'error' | 'neutral'> = {
   'Tecnología': 'primary', 'Educación': 'success', 'Deportes': 'warning', 'Música': 'error',
