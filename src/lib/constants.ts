@@ -12,6 +12,9 @@ export interface Evento {
   cupos_totales: number
   cupos_disponibles: number
   creado_en: string
+  creador_id?: string
+  categoria_id?: string
+  estado?: 'activo' | 'cancelado' | 'finalizado'
 }
 
 export const EVENT_CATEGORIES = [

@@ -18,7 +18,7 @@ import { supabase } from '../services/supabase'
 export function Profile() {
   const navigate = useNavigate()
   const { user, isLoading: authLoading, isAuthenticated, isOrganizer, logout, isMockMode } = useAuth()
-  const { events, loadEvents, isLoading: eventsLoading } = useEvents()
+  const { events, loadEvents, isLoading: eventsLoading, getUserEnrollments } = useEvents()
   const [isUpdating, setIsUpdating] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
 
@@ -59,14 +59,7 @@ export function Profile() {
   // Estadísticas del usuario
   const userEvents = isOrganizer
     ? events.filter(e => e.organizador_id === user.id)
-    : events.filter(e => {
-        // Inscripciones mock o de localStorage
-        const raw = localStorage.getItem('eventhub_enrollments')
-        if (!raw) return false
-        const enrollments = JSON.parse(raw)
-        const userEnrollments = enrollments[user.id] || []
-        return userEnrollments.includes(e.id)
-      })
+    : getUserEnrollments(user.id)
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsUpdating(true)
@@ -100,6 +93,16 @@ export function Profile() {
           data: { nombre: data.nombre, avatar_url: data.avatar_url }
         })
         if (error) throw error
+
+        // Sincronizar con la tabla pública de perfiles
+        const { error: profileError } = await supabase
+          .from('perfiles')
+          .update({ nombre: data.nombre })
+          .eq('id', user.id)
+        
+        if (profileError) {
+          console.error("Error al actualizar tabla 'perfiles':", profileError.message)
+        }
 
         const updatedProfile = { ...user, nombre: data.nombre, avatar_url: data.avatar_url }
         useAuthStore.setState({ user: updatedProfile })

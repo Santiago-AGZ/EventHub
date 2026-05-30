@@ -120,6 +120,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (error) throw error
 
         if (data?.user) {
+          // Intentar insertar en la tabla pública de perfiles
+          const { error: profileError } = await supabase
+            .from('perfiles')
+            .insert([{ id: data.user.id, nombre, email }])
+          
+          if (profileError) {
+            console.error("Error al registrar perfil en tabla 'perfiles':", profileError.message)
+          }
+
           const profile: UserProfile = {
             id: data.user.id,
             nombre,

@@ -84,8 +84,9 @@ export function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
+              variant="primary"
               onClick={() => navigate('/eventos')}
-              className="bg-white text-primary hover:bg-slate-100 shadow-xl shadow-black/20 font-bold"
+              className="shadow-xl shadow-primary/20 font-bold"
               id="hero-explore-btn"
             >
               Explorar Eventos <ArrowRight size={18} className="ml-1" />
@@ -93,9 +94,9 @@ export function Home() {
             {!user && (
               <Button
                 size="lg"
-                variant="outline"
+                variant="secondary"
                 onClick={() => navigate('/register')}
-                className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm"
+                className="font-bold shadow-md"
                 id="hero-register-btn"
               >
                 Crear Cuenta Gratis
@@ -255,28 +256,29 @@ export function Home() {
 
       {/* ─── CTA FINAL ────────────────────────────────────────── */}
       {!user && (
-        <section className="py-20 px-4 bg-gradient-to-br from-primary to-blue-800 text-white text-center">
+        <section className="py-20 px-4 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 border-t border-slate-900 text-white text-center">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
               ¿Listo para No Perderte Más Nada?
             </h2>
-            <p className="text-blue-200 text-lg mb-8">
+            <p className="text-slate-300 text-lg mb-8">
               Únete a los estudiantes que ya están aprovechando al máximo su vida universitaria con EventHub.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                className="bg-white text-primary hover:bg-slate-100 font-bold shadow-xl shadow-black/20"
+                variant="primary"
                 onClick={() => navigate('/register')}
+                className="font-bold shadow-xl shadow-primary/20"
                 id="cta-register-btn"
               >
                 Crear Cuenta Gratis
               </Button>
               <Button
                 size="lg"
-                variant="ghost"
-                className="text-white hover:bg-white/10"
+                variant="secondary"
                 onClick={() => navigate('/eventos')}
+                className="font-bold shadow-md"
                 id="cta-explore-btn"
               >
                 Ver Eventos →

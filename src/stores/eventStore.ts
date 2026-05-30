@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Evento } from '../lib/constants'
 import { INITIAL_MOCK_EVENTS } from '../lib/constants'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
+import { useAuthStore } from './authStore'
 
 interface EventStoreState {
   events: Evento[]
@@ -9,6 +10,8 @@ interface EventStoreState {
   categoryFilter: string
   sortByDate: 'asc' | 'desc'
   isLoading: boolean
+  userEnrollments: string[]
+  categoriesDb: { id: string; nombre: string; color: string }[]
   
   // Acciones
   setSearchQuery: (query: string) => void
@@ -54,6 +57,8 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
   categoryFilter: 'Todos',
   sortByDate: 'asc',
   isLoading: true,
+  userEnrollments: [],
+  categoriesDb: [],
 
   setSearchQuery: (query) => set({ searchQuery: query }),
   setCategoryFilter: (category) => set({ categoryFilter: category }),
@@ -65,15 +70,73 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
     // MODO REAL SUPABASE
     if (isSupabaseConfigured) {
       try {
+        // 1. Cargar Categorías
+        const { data: catData } = await supabase
+          .from('categorias')
+          .select('*')
+
+        if (catData) {
+          set({ categoriesDb: catData })
+        }
+
+        // 2. Cargar Eventos con Relaciones
         const { data, error } = await supabase
           .from('eventos')
-          .select('*')
-          .order('fecha', { ascending: get().sortByDate === 'asc' })
+          .select(`
+            *,
+            creador:perfiles(id, nombre),
+            categoria:categorias(id, nombre, color),
+            inscripciones(usuario_id)
+          `)
+          .order('fecha_inicio', { ascending: get().sortByDate === 'asc' })
         
         if (error) throw error
         
         if (data) {
-          set({ events: data as Evento[], isLoading: false })
+          const mappedEvents: Evento[] = data.map((evt: any) => {
+            const fechaInicioStr = evt.fecha_inicio || ''
+            const fecha = fechaInicioStr.split('T')[0] || ''
+            const hora = (fechaInicioStr.split('T')[1] || '').substring(0, 5) || ''
+            
+            const enrollmentsCount = evt.inscripciones ? evt.inscripciones.length : 0
+            const cuposDisponibles = Math.max(0, evt.max_inscritos - enrollmentsCount)
+
+            return {
+              id: evt.id,
+              titulo: evt.titulo,
+              descripcion: evt.descripcion,
+              fecha,
+              hora,
+              ubicacion: evt.ubicacion,
+              categoria: (evt.categoria?.nombre || 'Tecnología') as any,
+              imagen: evt.imagen_url || '',
+              organizador_id: evt.creador_id || '',
+              organizador_nombre: evt.creador?.nombre || 'Organizador',
+              cupos_totales: evt.max_inscritos || 0,
+              cupos_disponibles: cuposDisponibles,
+              creado_en: evt.created_at || '',
+              creador_id: evt.creador_id,
+              categoria_id: evt.categoria_id,
+              estado: evt.estado
+            }
+          })
+
+          // 3. Cargar Inscripciones del usuario activo
+          const currentUser = useAuthStore.getState().user
+          if (currentUser) {
+            const { data: enrollmentsData } = await supabase
+              .from('inscripciones')
+              .select('evento_id')
+              .eq('usuario_id', currentUser.id)
+            
+            if (enrollmentsData) {
+              set({ userEnrollments: enrollmentsData.map((e: any) => e.evento_id) })
+            }
+          } else {
+            set({ userEnrollments: [] })
+          }
+
+          set({ events: mappedEvents, isLoading: false })
           return
         }
       } catch (err: any) {
@@ -89,22 +152,34 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
   createEvent: async (eventData, organizer) => {
     set({ isLoading: true })
 
-    const newEvent: Evento = {
-      ...eventData,
-      id: `evt-${Date.now()}`,
-      organizador_id: organizer.id,
-      organizador_nombre: organizer.nombre,
-      cupos_disponibles: eventData.cupos_totales,
-      creado_en: new Date().toISOString(),
-      imagen: eventData.imagen || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800"
-    }
-
     // MODO REAL SUPABASE
     if (isSupabaseConfigured) {
       try {
+        let catObj = get().categoriesDb.find(c => c.nombre === eventData.categoria)
+        if (!catObj) {
+          const { data: catData } = await supabase
+            .from('categorias')
+            .select('*')
+            .eq('nombre', eventData.categoria)
+            .maybeSingle()
+          if (catData) catObj = catData
+        }
+
+        const dbEvent = {
+          creador_id: organizer.id,
+          categoria_id: catObj?.id,
+          titulo: eventData.titulo,
+          descripcion: eventData.descripcion,
+          fecha_inicio: `${eventData.fecha}T${eventData.hora}:00Z`,
+          ubicacion: eventData.ubicacion,
+          max_inscritos: eventData.cupos_totales,
+          imagen_url: eventData.imagen || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800",
+          estado: 'activo'
+        }
+
         const { error } = await supabase
           .from('eventos')
-          .insert([newEvent])
+          .insert([dbEvent])
         
         if (error) throw error
         
@@ -118,6 +193,16 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
     }
 
     // MODO SIMULADO LOCAL
+    const newEvent: Evento = {
+      ...eventData,
+      id: `evt-${Date.now()}`,
+      organizador_id: organizer.id,
+      organizador_nombre: organizer.nombre,
+      cupos_disponibles: eventData.cupos_totales,
+      creado_en: new Date().toISOString(),
+      imagen: eventData.imagen || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800"
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 500))
     const currentEvents = getLocalEvents()
     const updatedEvents = [newEvent, ...currentEvents]
@@ -130,22 +215,12 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
     // MODO REAL SUPABASE
     if (isSupabaseConfigured) {
       try {
-        // En Supabase, insertaríamos en una tabla intermedia 'inscripciones'
         const { error } = await supabase
           .from('inscripciones')
-          .insert([{ event_id: eventId, user_id: userId }])
+          .insert([{ evento_id: eventId, usuario_id: userId }])
         
         if (error) throw error
         
-        // También restar un cupo en el evento
-        const targetEvent = get().events.find(e => e.id === eventId)
-        if (targetEvent) {
-          await supabase
-            .from('eventos')
-            .update({ cupos_disponibles: Math.max(0, targetEvent.cupos_disponibles - 1) })
-            .eq('id', eventId)
-        }
-
         await get().loadEvents()
         return { success: true }
       } catch (err: any) {
@@ -191,19 +266,10 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
         const { error } = await supabase
           .from('inscripciones')
           .delete()
-          .eq('event_id', eventId)
-          .eq('user_id', userId)
+          .eq('evento_id', eventId)
+          .eq('usuario_id', userId)
         
         if (error) throw error
-
-        // Devolver un cupo
-        const targetEvent = get().events.find(e => e.id === eventId)
-        if (targetEvent) {
-          await supabase
-            .from('eventos')
-            .update({ cupos_disponibles: targetEvent.cupos_disponibles + 1 })
-            .eq('id', eventId)
-        }
 
         await get().loadEvents()
         return { success: true }
@@ -241,12 +307,18 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
   },
 
   getUserEnrollments: (userId) => {
+    if (isSupabaseConfigured) {
+      return get().events.filter(event => get().userEnrollments.includes(event.id))
+    }
     const enrollments = getLocalEnrollments()
     const userEvents = enrollments[userId] || []
     return get().events.filter(event => userEvents.includes(event.id))
   },
 
   isUserEnrolled: (eventId, userId) => {
+    if (isSupabaseConfigured) {
+      return get().userEnrollments.includes(eventId)
+    }
     const enrollments = getLocalEnrollments()
     const userEvents = enrollments[userId] || []
     return userEvents.includes(eventId)

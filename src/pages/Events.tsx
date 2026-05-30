@@ -10,7 +10,7 @@ import { CategoryFilter } from '../components/events/CategoryFilter'
 const CATEGORIES = ['Todos', 'Tecnología', 'Educación', 'Deportes', 'Música']
 
 export function Events() {
-  const { events, loadEvents, isLoading, searchQuery, setSearchQuery, categoryFilter, setCategoryFilter } = useEventStore()
+  const { events, loadEvents, isLoading, searchQuery, setSearchQuery, categoryFilter, setCategoryFilter, userEnrollments } = useEventStore()
   const { user } = useAuthStore()
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
@@ -50,11 +50,14 @@ export function Events() {
 
   const enrolledIds = useMemo(() => {
     if (!user) return new Set<string>()
+    if (userEnrollments && userEnrollments.length > 0) {
+      return new Set(userEnrollments)
+    }
     const raw = localStorage.getItem('eventhub_enrollments')
     if (!raw) return new Set<string>()
     const enrollments: Record<string, string[]> = JSON.parse(raw)
     return new Set(enrollments[user.id] || [])
-  }, [user, events])
+  }, [user, userEnrollments])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
