@@ -1,292 +1,305 @@
-import React, { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Calendar, Users, Zap, Shield, Smartphone, CheckCircle2 } from 'lucide-react'
-import { useEventStore } from '../stores/eventStore'
-import { useAuthStore } from '../stores/authStore'
-import { EventCard } from '../components/events/EventCard'
-import { Button } from '../components/ui/Button'
-
-const stats = [
-  { value: '500+', label: 'Estudiantes Activos', icon: Users },
-  { value: '200+', label: 'Eventos al Año', icon: Calendar },
-  { value: '30s', label: 'Para Inscribirse', icon: Zap },
-  { value: '4', label: 'Categorías de Eventos', icon: CheckCircle2 },
-]
+import { ArrowRight, Calendar, Users, Zap, Shield, Smartphone, CheckCircle2, XCircle, Sparkles } from 'lucide-react'
+import { useEventStore } from '@/stores/eventStore'
+import { useAuthStore } from '@/stores/authStore'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const features = [
-  {
-    icon: Zap,
-    title: 'Inscripción en 1 Click',
-    description: 'Olvídate de formularios por correo. Regístrate a cualquier evento en menos de 30 segundos.',
-    color: 'bg-amber-50 text-amber-600',
-  },
-  {
-    icon: Calendar,
-    title: 'Todo Centralizado',
-    description: 'Tecnología, deportes, música y más — todos los eventos universitarios en un solo lugar.',
-    color: 'bg-blue-50 text-blue-600',
-  },
-  {
-    icon: Smartphone,
-    title: '100% Responsivo',
-    description: 'Funciona perfecto en tu celular, tablet o computadora. Diseñado primero para móvil.',
-    color: 'bg-emerald-50 text-emerald-600',
-  },
-  {
-    icon: Shield,
-    title: 'Seguro y Confiable',
-    description: 'Tus datos están protegidos. Sin spam, sin duplicados de inscripción.',
-    color: 'bg-purple-50 text-purple-600',
-  },
+  { icon: Zap, title: 'Inscripción en 1 Click', description: 'Regístrate a cualquier evento en menos de 30 segundos.' },
+  { icon: Calendar, title: 'Todo Centralizado', description: 'Tecnología, deportes, música y más en un solo lugar.' },
+  { icon: Smartphone, title: '100% Responsivo', description: 'Funciona en celular, tablet o computadora.' },
+  { icon: Shield, title: 'Seguro y Confiable', description: 'Sin spam, sin inscripciones duplicadas.' },
 ]
 
 export function Home() {
-  const { events, loadEvents, isLoading } = useEventStore()
+  const { events, categories, loadEvents, loadCategories, isLoading } = useEventStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
   useEffect(() => {
     loadEvents()
-  }, [loadEvents])
+    loadCategories()
+  }, [loadEvents, loadCategories])
 
-  const featuredEvents = events.slice(0, 4)
+  const featuredEvents = useMemo(() => events.filter(e => e.estado === 'activo').slice(0, 4), [events])
+
+  const realStats = useMemo(() => [
+    { value: events.filter(e => e.estado === 'activo').length, label: 'Eventos Disponibles', icon: Calendar },
+    { value: categories.length || 4, label: 'Categorías', icon: CheckCircle2 },
+    { value: '30s', label: 'Para Inscribirse', icon: Zap },
+    { value: new Set(events.map(e => e.creador_id)).size || '—', label: 'Organizadores', icon: Users },
+  ], [events, categories])
 
   return (
-    <div className="flex flex-col">
-      {/* ─── HERO ─────────────────────────────────────────────── */}
-      <section
-        id="hero"
-        className="relative min-h-[88vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900"
-      >
-        {/* Orbes decorativos */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-400/15 rounded-full blur-3xl" />
+    <main className="flex flex-col">
+      <section className="relative min-h-[88dvh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background" />
 
-        <div className="relative max-w-4xl mx-auto px-6 text-center text-white py-24 animate-slide-up">
-          {/* Pill Badge */}
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-400/40 bg-blue-400/10 text-blue-300 text-sm font-semibold mb-8 backdrop-blur-sm">
-            <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-            Plataforma Universitaria 2026
-          </span>
+        <div className="relative mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-12 px-6 lg:grid-cols-2 lg:px-8">
+          <div className="flex flex-col gap-8 py-20 lg:py-32">
+            <span className="animate-fade-in-up inline-flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary backdrop-blur-sm" style={{ animationDelay: '0ms' }}>
+              <Sparkles size={14} />
+              Plataforma Universitaria 2026
+            </span>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold mb-6 leading-tight tracking-tight">
-            Todos los Eventos de tu{' '}
-            <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-              Universidad
-            </span>{' '}
-            en un Solo Lugar
-          </h1>
+            <h1 className="animate-fade-in-up text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl" style={{ animationDelay: '80ms' }}>
+              Todos los Eventos de tu{' '}
+              <span className="text-primary">Universidad</span>
+              <br />
+              en un Solo Lugar
+            </h1>
 
-          <p className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Descubre eventos de tecnología, deportes, música y más. Inscríbete en segundos y no te pierdas nada de lo que pasa en tu campus.
-          </p>
+            <p className="animate-fade-in-up max-w-[50ch] text-lg leading-relaxed text-muted-foreground sm:text-xl" style={{ animationDelay: '160ms' }}>
+              Descubre eventos de tecnología, deportes, música y más. 
+              Inscríbete en segundos y no te pierdas nada de lo que pasa en tu campus.
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              variant="primary"
-              onClick={() => navigate('/eventos')}
-              className="shadow-xl shadow-primary/20 font-bold"
-              id="hero-explore-btn"
-            >
-              Explorar Eventos <ArrowRight size={18} className="ml-1" />
-            </Button>
-            {!user && (
-              <Button
-                size="lg"
-                variant="secondary"
-                onClick={() => navigate('/register')}
-                className="font-bold shadow-md"
-                id="hero-register-btn"
-              >
-                Crear Cuenta Gratis
+            <div className="animate-fade-in-up flex flex-col gap-3 sm:flex-row" style={{ animationDelay: '240ms' }}>
+              <Button size="lg" className="btn-press h-12 px-6 text-base" onClick={() => navigate('/eventos')}>
+                Explorar Eventos <ArrowRight size={18} data-icon="inline-end" />
               </Button>
-            )}
+              {!user && (
+                <Button size="lg" variant="outline" className="btn-press h-12 px-6 text-base" onClick={() => navigate('/register')}>
+                  Crear Cuenta Gratis
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Ola decorativa inferior */}
-        <div className="absolute bottom-0 left-0 right-0 h-20 overflow-hidden">
-          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0 80H1440V40C1200 0 960 60 720 40C480 20 240 70 0 40V80Z" fill="#F8FAFC" />
-          </svg>
+          <div className="animate-fade-in-scale hidden lg:flex items-center justify-center" style={{ animationDelay: '320ms' }}>
+            <div className="relative">
+              <div className="relative z-10 grid grid-cols-2 gap-4">
+                {featuredEvents.slice(0, 4).map((evento, i) => (
+                  <div
+                    key={evento.id}
+                    className={`rounded-2xl border border-border bg-card overflow-hidden shadow-lg ${i === 0 ? 'col-span-2 row-span-2' : ''}`}
+                    style={{ aspectRatio: i === 0 ? '16/10' : '1' }}
+                  >
+                    <img
+                      src={evento.imagenes[0]?.url || evento.imagen_url || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800'}
+                      alt=""
+                      className="size-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-xs font-bold leading-tight line-clamp-1 text-white">{evento.titulo}</p>
+                      <p className="text-[10px] text-white/70">
+                        {new Date(evento.fecha_inicio).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ─── ESTADÍSTICAS ─────────────────────────────────────── */}
-      <section className="bg-slate-50 py-16 px-4" aria-label="Estadísticas de la plataforma">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map(({ value, label, icon: Icon }) => (
+      <section className="border-y border-border bg-card px-4 py-16" aria-label="Estadísticas de la plataforma">
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 md:grid-cols-4">
+          {realStats.map(({ value, label, icon: Icon }) => (
             <div key={label} className="text-center">
-              <div className="flex justify-center mb-2">
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center">
+              <div className="mb-2 flex justify-center">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10">
                   <Icon size={22} className="text-primary" />
                 </div>
               </div>
-              <p className="text-3xl font-extrabold text-slate-900 mb-1">{value}</p>
-              <p className="text-sm text-slate-500 font-medium">{label}</p>
+              <p className="mb-1 text-3xl font-extrabold">{value}</p>
+              <p className="text-sm font-medium text-muted-foreground">{label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ─── EVENTOS DESTACADOS ───────────────────────────────── */}
-      <section className="py-20 px-4 bg-white" aria-labelledby="featured-heading">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-10">
+      <section className="px-4 py-20" aria-labelledby="featured-heading">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 flex items-end justify-between">
             <div>
-              <p className="text-primary font-bold text-sm uppercase tracking-widest mb-1">Lo más popular</p>
-              <h2 id="featured-heading" className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-                Próximos Eventos
-              </h2>
+              <p className="animate-fade-in-up mb-1 text-sm font-bold uppercase tracking-widest text-primary" style={{ animationDelay: '0ms' }}>Lo mas popular</p>
+              <h2 id="featured-heading" className="animate-fade-in-up text-3xl font-extrabold sm:text-4xl" style={{ animationDelay: '80ms' }}>Próximos Eventos</h2>
             </div>
-            <Link
-              to="/eventos"
-              className="hidden sm:flex items-center gap-2 text-primary font-bold hover:underline underline-offset-4 text-sm"
-            >
+            <Link to="/eventos" className="animate-fade-in-up btn-press hidden items-center gap-2 rounded text-sm font-bold text-primary transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring sm:flex" style={{ animationDelay: '160ms' }}>
               Ver todos <ArrowRight size={16} />
             </Link>
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-80 rounded-2xl bg-slate-100 animate-pulse" />
-              ))}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-80 rounded-2xl" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="animate-stagger grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" aria-live="polite">
               {featuredEvents.map((evento) => (
-                <EventCard key={evento.id} evento={evento} />
+                <article key={evento.id} className="rounded-2xl">
+                  <Link to={`/eventos/${evento.id}`} className="block rounded-2xl focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.96]" aria-label={`Ver detalles de ${evento.titulo}`}>
+                    <Card className="card-hover group h-full overflow-hidden">
+                      <div className="relative h-44 overflow-hidden bg-muted">
+                        <img
+                          src={evento.imagenes[0]?.url || evento.imagen_url || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800'}
+                          alt={evento.titulo}
+                          className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                        <div className="absolute bottom-3 left-3">
+                          <Badge variant="secondary" className="text-xs">
+                            {evento.categoria?.nombre || 'Sin categoria'}
+                          </Badge>
+                        </div>
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="mb-1 line-clamp-2 font-bold leading-tight">{evento.titulo}</h3>
+                        <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{evento.descripcion}</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar size={12} />
+                            <span>{new Date(evento.fecha_inicio).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Users size={12} />
+                            <span>{evento.cupos_disponibles !== undefined && evento.max_inscritos ? `${evento.cupos_disponibles}/${evento.max_inscritos}` : 'Ilimitado'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </article>
               ))}
             </div>
           )}
 
-          <div className="text-center mt-10 sm:hidden">
-            <Button variant="outline" onClick={() => navigate('/eventos')}>
-              Ver todos los eventos <ArrowRight size={16} className="ml-1" />
+          <div className="animate-fade-in-up mt-10 text-center sm:hidden" style={{ animationDelay: '240ms' }}>
+            <Button variant="outline" className="btn-press" onClick={() => navigate('/eventos')}>
+              Ver todos los eventos <ArrowRight size={16} data-icon="inline-end" />
             </Button>
           </div>
         </div>
       </section>
 
-      {/* ─── CARACTERÍSTICAS ─────────────────────────────────── */}
-      <section className="py-20 px-4 bg-slate-50" aria-labelledby="features-heading">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-primary font-bold text-sm uppercase tracking-widest mb-2">¿Por qué EventHub?</p>
-            <h2 id="features-heading" className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-              La Forma Más Inteligente de Vivir tu Universidad
-            </h2>
-            <p className="text-slate-500 mt-4 max-w-xl mx-auto text-base">
-              Acabamos con la dispersión de información. Todo lo que necesitas saber está aquí.
+      <section className="border-t border-border bg-card px-4 py-20" aria-labelledby="features-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-14 text-center">
+            <p className="animate-fade-in-up mb-2 text-sm font-bold uppercase tracking-widest text-primary" style={{ animationDelay: '0ms' }}>Por que EventHub?</p>
+            <h2 id="features-heading" className="animate-fade-in-up text-3xl font-extrabold sm:text-4xl" style={{ animationDelay: '80ms' }}>La Forma Mas Inteligente de Vivir tu Universidad</h2>
+            <p className="animate-fade-in-up mx-auto mt-4 max-w-[65ch] text-muted-foreground" style={{ animationDelay: '160ms' }}>
+              Todo lo que necesitas saber esta aqui, sin dispersion de informacion.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map(({ icon: Icon, title, description, color }) => (
-              <div
-                key={title}
-                className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${color}`}>
-                  <Icon size={22} />
-                </div>
-                <h3 className="font-bold text-slate-900 mb-2">{title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{description}</p>
-              </div>
-            ))}
+          <div className="animate-stagger grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map(({ icon: Icon, title, description }, index) => {
+              if (index === 0) {
+                return (
+                  <Card key={title} className="card-hover active:scale-[0.96]">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <h3 className="mb-2 font-bold">{title}</h3>
+                          <p className="text-sm leading-relaxed text-muted-foreground max-w-[65ch]">{description}</p>
+                        </div>
+                        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                          <Icon size={22} className="text-primary" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              }
+              if (index === 1) {
+                return (
+                  <Card key={title} className="card-hover active:scale-[0.96]">
+                    <CardContent className="p-6">
+                      <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-primary/10">
+                        <Icon size={22} className="text-primary" />
+                      </div>
+                      <h3 className="mb-2 font-bold">{title}</h3>
+                      <p className="text-sm leading-relaxed text-muted-foreground max-w-[65ch]">{description}</p>
+                    </CardContent>
+                  </Card>
+                )
+              }
+              if (index === 2) {
+                return (
+                  <div key={title} className="card-hover active:scale-[0.96] rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-transparent p-6">
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-primary">
+                        <Icon size={20} className="text-primary-foreground" />
+                      </div>
+                      <h3 className="font-bold">{title}</h3>
+                    </div>
+                    <p className="text-sm leading-relaxed text-muted-foreground max-w-[65ch]">{description}</p>
+                  </div>
+                )
+              }
+              return (
+                <Card key={title} className="card-hover active:scale-[0.96]">
+                  <CardContent className="p-6 flex flex-col">
+                    <h3 className="mb-2 font-bold">{title}</h3>
+                    <p className="mb-4 text-sm leading-relaxed text-muted-foreground max-w-[65ch]">{description}</p>
+                    <div className="mt-auto flex size-12 items-center justify-center self-end rounded-2xl bg-primary/10">
+                      <Icon size={22} className="text-primary" />
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </div>
       </section>
 
-      {/* ─── ANTES / DESPUÉS ──────────────────────────────────── */}
-      <section className="py-20 px-4 bg-white" aria-labelledby="comparison-heading">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 id="comparison-heading" className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4">
-              El Antes y el Después
-            </h2>
+      <section className="px-4 py-20" aria-labelledby="comparison-heading">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-12 text-center">
+            <h2 id="comparison-heading" className="animate-fade-in-up mb-4 text-3xl font-extrabold sm:text-4xl" style={{ animationDelay: '0ms' }}>El Antes y el Despues</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Sin EventHub */}
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-              <h3 className="font-extrabold text-red-700 text-lg mb-4 flex items-center gap-2">
-                ❌ Sin EventHub
+          <div className="animate-stagger grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Card className="card-hover active:scale-[0.96] border-destructive/30 bg-destructive/5 p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-extrabold text-destructive">
+                <XCircle size={20} /> Sin EventHub
               </h3>
-              <ul className="space-y-3 text-sm text-red-800">
-                {[
-                  'Revisar 4 apps diferentes',
-                  'Inscripción por correo (5+ minutos)',
-                  'Perder eventos por no enterarse',
-                  'Excel para gestionar inscritos',
-                  'Confirmaciones perdidas en el correo',
-                ].map((item) => (
+              <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
+                {['Revisar 4 apps diferentes', 'Inscripción por correo (5+ minutos)', 'Perder eventos por no enterarse', 'Excel para gestionar inscritos', 'Confirmaciones perdidas en el correo'].map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <span className="mt-0.5 shrink-0">✗</span>
-                    {item}
+                    <XCircle size={14} className="mt-0.5 shrink-0 text-destructive" /> {item}
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card>
 
-            {/* Con EventHub */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6">
-              <h3 className="font-extrabold text-emerald-700 text-lg mb-4 flex items-center gap-2">
-                ✅ Con EventHub
+            <Card className="card-hover active:scale-[0.96] border-primary/30 bg-primary/5 p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-extrabold text-primary">
+                <CheckCircle2 size={20} /> Con EventHub
               </h3>
-              <ul className="space-y-3 text-sm text-emerald-800">
-                {[
-                  '1 sola plataforma para todo',
-                  'Inscripción en 1 click (30 segundos)',
-                  'Catálogo siempre actualizado',
-                  'Dashboard automático de inscritos',
-                  'Panel "Mis Inscripciones" centralizado',
-                ].map((item) => (
+              <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
+                {['1 sola plataforma para todo', 'Inscripción en 1 click (30 segundos)', 'Catálogo siempre actualizado', 'Dashboard automatico de inscritos', 'Panel "Mis Inscripciónes" centralizado'].map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
-                    {item}
+                    <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-primary" /> {item}
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* ─── CTA FINAL ────────────────────────────────────────── */}
       {!user && (
-        <section className="py-20 px-4 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 border-t border-slate-900 text-white text-center">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
-              ¿Listo para No Perderte Más Nada?
-            </h2>
-            <p className="text-slate-300 text-lg mb-8">
-              Únete a los estudiantes que ya están aprovechando al máximo su vida universitaria con EventHub.
+        <section className="border-t border-border bg-gradient-to-br from-primary/5 via-background to-primary/10 px-4 py-20 text-center">
+          <div className="mx-auto max-w-2xl">
+            <h2 className="animate-fade-in-up mb-4 text-3xl font-extrabold sm:text-4xl" style={{ animationDelay: '0ms' }}>Listo para No Perderte Mas Nada?</h2>
+            <p className="animate-fade-in-up mx-auto mb-8 max-w-[65ch] text-lg text-muted-foreground" style={{ animationDelay: '150ms' }}>
+              Unete a los estudiantes que ya estan aprovechando al maximo su vida universitaria con EventHub.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                variant="primary"
-                onClick={() => navigate('/register')}
-                className="font-bold shadow-xl shadow-primary/20"
-                id="cta-register-btn"
-              >
-                Crear Cuenta Gratis
-              </Button>
-              <Button
-                size="lg"
-                variant="secondary"
-                onClick={() => navigate('/eventos')}
-                className="font-bold shadow-md"
-                id="cta-explore-btn"
-              >
-                Ver Eventos →
-              </Button>
+            <div className="animate-fade-in-up flex flex-col justify-center gap-4 sm:flex-row" style={{ animationDelay: '300ms' }}>
+              <Button size="lg" className="btn-press" onClick={() => navigate('/register')}>Crear Cuenta Gratis</Button>
+              <Button size="lg" variant="outline" className="btn-press" onClick={() => navigate('/eventos')}>Ver Eventos</Button>
             </div>
           </div>
         </section>
       )}
-    </div>
+    </main>
   )
 }
+

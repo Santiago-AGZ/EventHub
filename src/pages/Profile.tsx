@@ -1,326 +1,132 @@
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { User, Mail, Shield, Award, Edit3, Save, LogOut, Calendar, CheckCircle } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
-import { useEvents } from '../hooks/useEvents'
-import { profileSchema } from '../schemas/profileSchema'
-import type { ProfileFormData } from '../schemas/profileSchema'
-import { useAuthStore } from '../stores/authStore'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Card } from '../components/ui/Card'
-import { Badge } from '../components/ui/Badge'
-import { supabase } from '../services/supabase'
+import { Mail, Edit3, LogOut, Shield, Calendar } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { useAuthStore } from '@/stores/authStore'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { supabase } from '@/services/supabase'
 
 export function Profile() {
   const navigate = useNavigate()
-  const { user, isLoading: authLoading, isAuthenticated, isOrganizer, logout, isMockMode } = useAuth()
-  const { events, loadEvents, isLoading: eventsLoading, getUserEnrollments } = useEvents()
-  const [isUpdating, setIsUpdating] = useState(false)
+  const { user, isLoading: authLoading, isAuthenticated, isOrganizer, logout } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [nombre, setNombre] = useState(user?.nombre || '')
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-  })
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/login')
-    }
-  }, [authLoading, isAuthenticated, navigate])
-
-  useEffect(() => {
-    loadEvents()
-  }, [loadEvents])
-
-  useEffect(() => {
-    if (user) {
-      setValue('nombre', user.nombre)
-      setValue('avatar_url', user.avatar_url || '')
-    }
-  }, [user, setValue])
-
-  if (authLoading || !user) {
+  if (authLoading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex min-h-[70dvh] items-center justify-center">
+        <Skeleton className="size-12 rounded-full animate-pulse" />
       </div>
     )
   }
 
-  // Estadísticas del usuario
-  const userEvents = isOrganizer
-    ? events.filter(e => e.organizador_id === user.id)
-    : getUserEnrollments(user.id)
+  if (!isAuthenticated || !user) {
+    navigate('/login')
+    return null
+  }
 
-  const onSubmit = async (data: ProfileFormData) => {
+  const handleUpdate = async () => {
     setIsUpdating(true)
     try {
-      if (isMockMode) {
-        // Guardar mock en local
-        const session = localStorage.getItem('eventhub_current_session')
-        if (session) {
-          const profile = JSON.parse(session)
-          const updatedProfile = { ...profile, nombre: data.nombre, avatar_url: data.avatar_url }
-          localStorage.setItem('eventhub_current_session', JSON.stringify(updatedProfile))
-          
-          // Actualizar lista de cuentas mock
-          const accountsRaw = localStorage.getItem('eventhub_mock_accounts')
-          if (accountsRaw) {
-            const accounts = JSON.parse(accountsRaw)
-            if (accounts[profile.email]) {
-              accounts[profile.email] = { ...accounts[profile.email], nombre: data.nombre, avatar_url: data.avatar_url }
-              localStorage.setItem('eventhub_mock_accounts', JSON.stringify(accounts))
-            }
-          }
-          
-          // Actualizar estado Zustand
-          useAuthStore.setState({ user: updatedProfile })
-          toast.success('¡Perfil actualizado con éxito! (Modo Simulado)')
-          setIsEditing(false)
-        }
-      } else {
-        // Guardar en Supabase
-        const { error } = await supabase.auth.updateUser({
-          data: { nombre: data.nombre, avatar_url: data.avatar_url }
-        })
-        if (error) throw error
+      const { error } = await supabase.auth.updateUser({ data: { nombre } })
+      if (error) throw error
 
-        // Sincronizar con la tabla pública de perfiles
-        const { error: profileError } = await supabase
-          .from('perfiles')
-          .update({ nombre: data.nombre })
-          .eq('id', user.id)
-        
-        if (profileError) {
-          console.error("Error al actualizar tabla 'perfiles':", profileError.message)
-        }
+      await supabase.from('perfiles').update({ nombre }).eq('id', user.id)
 
-        const updatedProfile = { ...user, nombre: data.nombre, avatar_url: data.avatar_url }
-        useAuthStore.setState({ user: updatedProfile })
-        toast.success('¡Perfil actualizado con éxito en Supabase! 🎉')
-        setIsEditing(false)
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Error al actualizar el perfil')
+      useAuthStore.setState({ user: { ...user, nombre } })
+      toast.success('¡Perfil actualizado con éxito! Tus cambios ya están visibles.')
+      setIsEditing(false)
+    } catch (err) {
+      toast.error('No se pudo actualizar tu perfil. ' + (err instanceof Error ? err.message : 'Intenta de nuevo más tarde.'))
     } finally {
       setIsUpdating(false)
     }
   }
 
-  const handleLogout = async () => {
-    await logout()
-    toast.success('Sesión cerrada correctamente.')
-    navigate('/')
-  }
-
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-      {/* Cabecera de perfil */}
-      <div className="relative rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-8 text-white shadow-xl overflow-hidden mb-8">
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]"></div>
-        <div className="relative flex flex-col md:flex-row items-center gap-6 z-10">
-          <div className="relative group">
-            <img
-              src={user.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id}`}
-              alt={user.nombre}
-              className="w-28 h-28 rounded-full border-4 border-white/30 object-cover shadow-lg bg-white/10 backdrop-blur-md"
-            />
-            {isEditing && (
-              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-xs font-semibold cursor-pointer">
-                Editar
-              </div>
-            )}
-          </div>
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <Card className="animate-fade-in-scale card-hover overflow-hidden border-0 bg-gradient-to-r from-primary/20 via-primary/10 to-background p-8">
+        <div className="relative z-10 flex flex-col items-center gap-6 md:flex-row">
+          <img
+            src={user.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id}`}
+            alt={user.nombre}
+            className="size-28 rounded-full border-4 border-background object-cover shadow-lg transition-transform duration-500 hover:scale-105"
+          />
 
-          <div className="text-center md:text-left flex-1">
-            <div className="flex flex-col md:flex-row items-center gap-2 mb-2">
-              <h1 className="text-3xl font-extrabold tracking-tight">{user.nombre}</h1>
-              <Badge variant={isOrganizer ? 'warning' : 'primary'} className="mt-1 md:mt-0 font-bold border border-white/20 bg-white/20 text-white">
+          <div className="flex-1 text-center md:text-left">
+            <div className="mb-2 flex flex-col items-center gap-2 md:flex-row">
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{user.nombre}</h1>
+              <Badge variant={isOrganizer ? 'default' : 'secondary'} className="font-bold">
                 {user.rol}
               </Badge>
             </div>
-            
-            <p className="text-white/80 flex items-center gap-2 justify-center md:justify-start text-sm">
+            <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground md:justify-start">
               <Mail size={14} /> {user.email}
             </p>
-            <p className="text-white/70 flex items-center gap-2 justify-center md:justify-start text-xs mt-1">
-              <Shield size={12} /> ID de Usuario: <code className="bg-white/10 px-1.5 py-0.5 rounded text-[10px] font-mono">{user.id}</code>
+            <p className="mt-1 text-xs text-muted-foreground">
+              <Shield size={12} className="inline" /> ID: <code className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-foreground">{user.id}</code>
             </p>
           </div>
 
-          <div className="flex gap-3 mt-4 md:mt-0">
-            <Button
-              variant="secondary"
-              onClick={() => setIsEditing(!isEditing)}
-              className="bg-white/20 hover:bg-white/30 text-white border-none shadow-md backdrop-blur-md"
-            >
-              <Edit3 size={16} className="mr-2" />
-              {isEditing ? 'Cancelar' : 'Editar Perfil'}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setIsEditing(!isEditing)} className="btn-press">
+              <Edit3 size={16} data-icon="inline-start" /> {isEditing ? 'Cancelar' : 'Editar'}
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleLogout}
-              className="bg-red-500/80 hover:bg-red-600 text-white border-none shadow-md"
-            >
-              <LogOut size={16} className="mr-2" />
-              Cerrar Sesión
+            <Button variant="destructive" onClick={() => { logout(); toast.success('Sesión cerrada correctamente. ¡Hasta pronto!'); navigate('/') }} className="btn-press">
+              <LogOut size={16} data-icon="inline-start" /> Salir
             </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Panel Izquierdo / Edición de Perfil */}
-        <div className="lg:col-span-1 space-y-6">
-          {isEditing ? (
-            <Card className="p-6 border-slate-200 shadow-lg bg-white/80 backdrop-blur-md">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <User size={18} className="text-primary" /> Editar Mis Datos
-              </h2>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <Input
-                  label="Nombre Completo"
-                  id="profile-nombre"
-                  error={errors.nombre?.message}
-                  {...register('nombre')}
-                />
-                <Input
-                  label="URL del Avatar (Opcional)"
-                  id="profile-avatar"
-                  placeholder="https://images.unsplash.com/..."
-                  error={errors.avatar_url?.message}
-                  {...register('avatar_url')}
-                />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  isLoading={isUpdating}
-                >
-                  <Save size={16} className="mr-2" />
-                  Guardar Cambios
-                </Button>
-              </form>
-            </Card>
-          ) : (
-            <Card className="p-6 border-slate-200 shadow-md">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Award size={18} className="text-primary" /> Información de Rol
-              </h2>
-              <div className="space-y-3 text-sm text-slate-600">
-                <p>
-                  Estás registrado como <strong className="text-slate-800">{user.rol}</strong>.
-                </p>
-                {isOrganizer ? (
-                  <p className="bg-amber-50 text-amber-800 p-3 rounded-xl border border-amber-100 text-xs leading-relaxed">
-                    🌟 Como Organizador, tienes el privilegio de publicar eventos en la plataforma, gestionar capacidades y consultar las listas de asistencia.
-                  </p>
-                ) : (
-                  <p className="bg-indigo-50 text-indigo-800 p-3 rounded-xl border border-indigo-100 text-xs leading-relaxed">
-                    🎓 Como Estudiante, puedes explorar todo el catálogo de eventos del campus, inscribirte con un clic y gestionar tu agenda personal de actividades.
-                  </p>
-                )}
-                <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-xs">
-                  <span>Modo de conexión:</span>
-                  <span className={`font-semibold ${isMockMode ? 'text-amber-600' : 'text-emerald-600'}`}>
-                    {isMockMode ? '🔌 Simulado (Local)' : '⚡ Supabase Activo'}
-                  </span>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Tarjeta de Resumen */}
-          <Card className="p-6 border-slate-200 shadow-md text-center bg-gradient-to-br from-slate-50 to-slate-100">
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Total de Eventos</h3>
-            <p className="text-5xl font-black text-slate-800 mb-2">{userEvents.length}</p>
-            <p className="text-xs text-slate-500 font-medium">
-              {isOrganizer ? 'Eventos creados por ti en el campus' : 'Eventos en los que te has inscrito'}
-            </p>
-          </Card>
-        </div>
-
-        {/* Panel Derecho / Actividades del Usuario */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="p-6 border-slate-200 shadow-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <Calendar size={20} className="text-primary" /> 
-                {isOrganizer ? 'Mis Eventos Creados' : 'Mis Inscripciones Activas'}
-              </h2>
-              {!isOrganizer && (
-                <Button variant="secondary" size="sm" onClick={() => navigate('/mis-eventos')}>
-                  Gestionar agenda
-                </Button>
-              )}
+      {isEditing && (
+        <Card className="animate-slide-up card-hover mt-8 border-border" aria-live="polite">
+          <CardContent className="flex flex-col gap-4 p-6">
+            <h2 className="text-lg font-bold text-foreground">Editar Perfil</h2>
+            <div>
+              <label htmlFor="nombre" className="mb-1.5 block text-sm font-medium text-foreground">Nombre</label>
+              <Input id="nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre completo" className="transition-[color,background-color,box-shadow,border-color] duration-200" />
             </div>
+            <Button onClick={handleUpdate} disabled={isUpdating} className="btn-press">
+              {isUpdating ? 'Guardando...' : 'Guardar Cambios'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
-            {eventsLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-16 rounded-xl bg-slate-100 animate-pulse" />
-                ))}
+      <div className="mt-8 animate-stagger">
+        <Card className="card-hover animate-fade-in-up border-border">
+          <CardContent className="flex flex-col gap-4 p-6">
+            <div className="flex items-center gap-2">
+              <Calendar size={18} className="text-primary" />
+              <h2 className="text-lg font-bold text-foreground">Informacion de la cuenta</h2>
+            </div>
+            <Separator />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Nombre</p>
+                <p className="font-semibold text-foreground">{user.nombre}</p>
               </div>
-            ) : userEvents.length === 0 ? (
-              <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-2xl">
-                <p className="text-4xl mb-3">📅</p>
-                <p className="text-slate-500 font-medium text-sm">
-                  {isOrganizer ? 'Aún no has creado ningún evento.' : 'No estás inscrito en ningún evento todavía.'}
-                </p>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => navigate(isOrganizer ? '/crear-evento' : '/eventos')}
-                >
-                  {isOrganizer ? 'Crear mi primer evento' : 'Explorar eventos'}
-                </Button>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Email</p>
+                <p className="font-semibold text-foreground">{user.email}</p>
               </div>
-            ) : (
-              <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto pr-2 space-y-3">
-                {userEvents.map(event => (
-                  <div
-                    key={event.id}
-                    onClick={() => navigate(`/eventos/${event.id}`)}
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-150 transition-all"
-                  >
-                    <img
-                      src={event.imagen || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=150'}
-                      alt={event.titulo}
-                      className="w-14 h-14 rounded-lg object-cover bg-slate-100 shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-slate-800 text-sm truncate">{event.titulo}</h3>
-                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                        <span>{new Date(event.fecha + 'T00:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}</span>
-                        <span>•</span>
-                        <span className="truncate">{event.ubicacion}</span>
-                      </div>
-                    </div>
-                    <div className="shrink-0 flex flex-col items-end gap-1">
-                      <Badge variant={event.categoria === 'Tecnología' ? 'primary' : event.categoria === 'Educación' ? 'success' : event.categoria === 'Deportes' ? 'warning' : 'error'}>
-                        {event.categoria}
-                      </Badge>
-                      <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-0.5">
-                        <CheckCircle size={10} className="text-emerald-500" />
-                        {isOrganizer ? 'Organizado' : 'Inscrito'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Rol</p>
+                <Badge variant="outline">{user.rol}</Badge>
               </div>
-            )}
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
 }
+

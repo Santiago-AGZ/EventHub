@@ -1,87 +1,165 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Calendar } from 'lucide-react'
-import { useAuthStore } from '../stores/authStore'
-import { RegisterForm } from '../features/auth/RegisterForm'
-import type { RegisterFormData } from '../schemas/authSchema'
+import { Calendar, Mail, Lock, User, ArrowRight } from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card'
 
-type Rol = 'Estudiante' | 'Organizador' | 'Empresa'
+const registerSchema = z
+  .object({
+    nombre: z
+      .string()
+      .min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
+    email: z
+      .string()
+      .min(1, { message: "El correo electrónico es requerido." })
+      .email({ message: "Ingrese un correo electrónico válido." }),
+    password: z
+      .string()
+      .min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
+    confirmPassword: z
+      .string()
+      .min(1, { message: "Por favor, confirme su contraseña." }),
+    rol: z.enum(["Estudiante", "Organizador", "Empresa"]),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden.",
+    path: ["confirmPassword"],
+  })
+
+type RegisterFormData = z.infer<typeof registerSchema>
+
+const ROLES = ['Estudiante', 'Organizador', 'Empresa'] as const
 
 export function Register() {
   const navigate = useNavigate()
   const { register: registerUser } = useAuthStore()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const onSubmit = async (data: RegisterFormData, rol: Rol) => {
-    setIsSubmitting(true)
-    const result = await registerUser(data.nombre, data.email, data.password, rol)
-    setIsSubmitting(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      rol: 'Estudiante',
+    },
+  })
+
+  const onSubmit = async (data: RegisterFormData) => {
+    setIsLoading(true)
+    const result = await registerUser(data.nombre, data.email, data.password, data.rol)
+    setIsLoading(false)
     if (result.success) {
-      toast.success('¡Cuenta creada exitosamente! 🎉', {
-        description: 'Bienvenido a EventHub.',
-      })
+      toast.success('Cuenta creada exitosamente')
       navigate('/')
     } else {
-      toast.error(result.error || 'Error al crear la cuenta')
+      toast.error(result.error || 'Error al registrarse')
+      if (result.error?.toLowerCase().includes('email')) {
+        setError('email', { message: result.error })
+      }
+      if (result.error?.toLowerCase().includes('nombre')) {
+        setError('nombre', { message: result.error })
+      }
     }
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      {/* Panel decorativo izquierdo */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-primary/20 rounded-full blur-3xl" />
-        <div className="relative z-10 text-white text-center max-w-sm space-y-6">
-          <div className="flex justify-center">
-            <div className="bg-primary p-4 rounded-2xl shadow-xl">
-              <Calendar size={40} />
-            </div>
+    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-background via-primary/5 to-background px-4 py-10">
+      <a href="#register-form" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-primary-foreground focus:shadow-lg">
+        Saltar al formulario de registro
+      </a>
+      <div className="w-full max-w-md flex flex-col gap-8">
+        <div className="text-center">
+          <div className="animate-float mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+            <Calendar size={28} />
           </div>
-          <h2 className="text-3xl font-extrabold">Únete a <span className="text-blue-400">EventHub</span></h2>
-          <p className="text-slate-300 leading-relaxed">
-            Crea tu cuenta gratis y comienza a ser parte de la vida universitaria. Miles de eventos te esperan.
-          </p>
-          {[
-            '✓ Registro gratuito sin tarjeta',
-            '✓ Inscripción en 1 click',
-            '✓ Notificaciones de nuevos eventos',
-            '✓ Panel de inscripciones centralizado',
-          ].map((item) => (
-            <p key={item} className="text-sm text-slate-300 text-left">{item}</p>
-          ))}
+          <h1 className="animate-fade-in-up text-3xl font-extrabold tracking-tight" style={{ animationDelay: '0ms' }}>EventHub</h1>
+          <p className="animate-fade-in-up mt-2 text-muted-foreground" style={{ animationDelay: '100ms' }}>Crea tu cuenta y empieza a descubrir eventos</p>
         </div>
-      </div>
 
-      {/* Formulario de registro */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md">
-          {/* Logo móvil */}
-          <div className="flex items-center gap-2 mb-6 lg:hidden">
-            <div className="bg-primary text-white p-2 rounded-xl">
-              <Calendar size={22} />
-            </div>
-            <span className="text-2xl font-extrabold text-primary">EventHub</span>
-          </div>
+        <Card className="animate-fade-in-scale border-border" style={{ animationDelay: '200ms' }} id="register-form">
+          <CardHeader>
+            <h2 className="text-base leading-snug font-medium">Crear Cuenta</h2>
+            <CardDescription>Completa tus datos para registrarte</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" aria-live="polite">
+              <div>
+                <label htmlFor="nombre" className="mb-1.5 block text-sm font-medium">Nombre completo</label>
+                <div className="relative">
+                  <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="nombre" className="pl-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="Tu nombre" aria-invalid={!!errors.nombre} aria-describedby={errors.nombre ? 'nombre-error' : undefined} {...register('nombre')} />
+                </div>
+                {errors.nombre && (
+                  <p id="nombre-error" className="mt-1 text-sm text-destructive" role="alert">{errors.nombre.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="email" className="mb-1.5 block text-sm font-medium">Email</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="email" type="email" className="pl-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="tu@email.com" aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-error' : undefined} {...register('email')} />
+                </div>
+                {errors.email && (
+                  <p id="email-error" className="mt-1 text-sm text-destructive" role="alert">{errors.email.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="password" className="mb-1.5 block text-sm font-medium">Contraseña</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="password" type="password" className="pl-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="Minimo 6 caracteres" aria-invalid={!!errors.password} aria-describedby={errors.password ? 'password-error' : undefined} {...register('password')} />
+                </div>
+                {errors.password && (
+                  <p id="password-error" className="mt-1 text-sm text-destructive" role="alert">{errors.password.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="confirmPassword" className="mb-1.5 block text-sm font-medium">Confirmar Contraseña</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="confirmPassword" type="password" className="pl-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="Repite tu contraseña" aria-invalid={!!errors.confirmPassword} aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined} {...register('confirmPassword')} />
+                </div>
+                {errors.confirmPassword && (
+                  <p id="confirm-password-error" className="mt-1 text-sm text-destructive" role="alert">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="rol" className="mb-1.5 block text-sm font-medium">Rol</label>
+                <select
+                  id="rol"
+                  className="h-10 w-full rounded-md border border-input bg-card px-3 text-sm transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:shadow-md focus:shadow-primary/5"
+                  aria-invalid={!!errors.rol}
+                  aria-describedby={errors.rol ? 'rol-error' : undefined}
+                  {...register('rol')}
+                >
+                  {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+                {errors.rol && (
+                  <p id="rol-error" className="mt-1 text-sm text-destructive" role="alert">{errors.rol.message}</p>
+                )}
+              </div>
+              <Button type="submit" className="btn-press w-full" disabled={isLoading}>
+                {isLoading ? 'Creando cuenta...' : (
+                  <>Crear Cuenta <ArrowRight size={16} data-icon="inline-end" /></>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-1">
-            Crear Cuenta
-          </h1>
-          <p className="text-slate-500 mb-6 text-sm">
-            ¿Ya tienes cuenta?{' '}
-            <Link to="/login" className="text-primary font-bold hover:underline">
-              Inicia sesión aquí
-            </Link>
-          </p>
-
-          <RegisterForm onSubmit={onSubmit} isLoading={isSubmitting} />
-
-          <p className="text-xs text-center text-slate-400 mt-5">
-            Al registrarte, aceptas nuestros{' '}
-            <a href="#terminos" className="text-primary hover:underline">Términos de Uso</a> y{' '}
-            <a href="#privacidad" className="text-primary hover:underline">Política de Privacidad</a>.
-          </p>
-        </div>
+        <p className="text-center text-sm text-muted-foreground">
+          Ya tienes cuenta?{' '}
+          <Link to="/login" className="font-semibold text-primary transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring rounded-sm">Inicia sesión</Link>
+        </p>
       </div>
     </div>
   )

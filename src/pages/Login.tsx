@@ -1,109 +1,112 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Calendar } from 'lucide-react'
-import { useAuthStore } from '../stores/authStore'
-import { LoginForm } from '../features/auth/LoginForm'
-import { Button } from '../components/ui/Button'
-import type { LoginFormData } from '../schemas/authSchema'
+import { Calendar, Mail, Lock, ArrowRight } from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card'
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: "El correo electrónico es requerido." })
+    .email({ message: "Ingrese un correo electrónico válido." }),
+  password: z
+    .string()
+    .min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
 
 export function Login() {
   const navigate = useNavigate()
   const { login } = useAuthStore()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  })
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsSubmitting(true)
+    setIsLoading(true)
     const result = await login(data.email, data.password)
-    setIsSubmitting(false)
+    setIsLoading(false)
     if (result.success) {
-      toast.success('¡Bienvenido de vuelta! 👋')
       navigate('/')
     } else {
-      toast.error(result.error || 'Credenciales inválidas')
+      toast.error(result.error || 'Error al iniciar sesión')
+      if (result.error?.toLowerCase().includes('email')) {
+        setError('email', { message: result.error })
+      }
+      if (result.error?.toLowerCase().includes('contraseña') || result.error?.toLowerCase().includes('password')) {
+        setError('password', { message: result.error })
+      }
     }
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      {/* Panel izquierdo — decorativo */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute top-1/3 left-1/3 w-80 h-80 bg-primary/20 rounded-full blur-3xl" />
-        <div className="relative z-10 text-white text-center max-w-sm">
-          <div className="flex justify-center mb-6">
-            <div className="bg-primary p-4 rounded-2xl shadow-xl">
-              <Calendar size={40} />
-            </div>
+    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-background via-primary/5 to-background px-4">
+      <a href="#login-form" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-primary-foreground focus:shadow-lg">
+        Saltar al formulario de inicio de sesión
+      </a>
+      <div className="w-full max-w-md flex flex-col gap-8">
+        <div className="text-center">
+          <div className="animate-float mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+            <Calendar size={28} />
           </div>
-          <h2 className="text-3xl font-extrabold mb-4">
-            Bienvenido a <span className="text-blue-400">EventHub</span>
-          </h2>
-          <p className="text-slate-300 leading-relaxed mb-8">
-            Tu plataforma centralizada de eventos universitarios. Inicia sesión y no te pierdas nada.
-          </p>
-          {/* Credenciales de prueba */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-left border border-white/20">
-            <p className="text-xs text-slate-300 font-bold uppercase tracking-widest mb-2">Credenciales de prueba</p>
-            <div className="space-y-2 text-xs text-slate-200">
+          <h1 className="animate-fade-in-up text-3xl font-extrabold tracking-tight" style={{ animationDelay: '0ms' }}>EventHub</h1>
+          <p className="animate-fade-in-up mt-2 text-muted-foreground" style={{ animationDelay: '100ms' }}>Inicia sesión para gestionar tus eventos</p>
+        </div>
+
+        <Card className="animate-fade-in-scale border-border" style={{ animationDelay: '200ms' }} id="login-form">
+          <CardHeader>
+            <h2 className="text-base leading-snug font-medium">Iniciar Sesión</h2>
+            <CardDescription>Ingresa tus credenciales para continuar</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" aria-live="polite">
               <div>
-                <span className="text-blue-300 font-semibold">Estudiante:</span><br />
-                estudiante@universidad.edu / password123
+                <label htmlFor="email" className="mb-1.5 block text-sm font-medium">Email</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="email" type="email" className="pl-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="tu@email.com" aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-error' : undefined} {...register('email')} />
+                </div>
+                {errors.email && (
+                  <p id="email-error" className="mt-1 text-sm text-destructive" role="alert">{errors.email.message}</p>
+                )}
               </div>
               <div>
-                <span className="text-blue-300 font-semibold">Organizador:</span><br />
-                organizador@universidad.edu / password123
+                <label htmlFor="password" className="mb-1.5 block text-sm font-medium">Contraseña</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="password" type="password" className="pl-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="Tu contraseña" aria-invalid={!!errors.password} aria-describedby={errors.password ? 'password-error' : undefined} {...register('password')} />
+                </div>
+                {errors.password && (
+                  <p id="password-error" className="mt-1 text-sm text-destructive" role="alert">{errors.password.message}</p>
+                )}
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
+              <Button type="submit" className="btn-press w-full" disabled={isLoading}>
+                {isLoading ? 'Iniciando sesión...' : (
+                  <>Iniciar Sesión <ArrowRight size={16} data-icon="inline-end" /></>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-      {/* Panel derecho — formulario */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md">
-          {/* Logo móvil */}
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="bg-primary text-white p-2 rounded-xl">
-              <Calendar size={22} />
-            </div>
-            <span className="text-2xl font-extrabold text-primary">EventHub</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
-            Iniciar Sesión
-          </h1>
-          <p className="text-slate-500 mb-8 text-sm">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="text-primary font-bold hover:underline">
-              Regístrate gratis
-            </Link>
-          </p>
-
-          <LoginForm onSubmit={onSubmit} isLoading={isSubmitting} />
-
-          {/* Divisor */}
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-slate-200" />
-            <span className="text-xs text-slate-400 font-medium">O continúa con</span>
-            <div className="flex-1 h-px bg-slate-200" />
-          </div>
-
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            id="guest-btn"
-            onClick={() => navigate('/eventos')}
-          >
-            Explorar sin iniciar sesión →
-          </Button>
-
-          <p className="text-xs text-center text-slate-400 mt-6">
-            Al continuar, aceptas nuestros{' '}
-            <a href="#terminos" className="text-primary hover:underline">Términos de Uso</a> y{' '}
-            <a href="#privacidad" className="text-primary hover:underline">Política de Privacidad</a>.
-          </p>
-        </div>
+        <p className="text-center text-sm text-muted-foreground">
+          No tienes cuenta?{' '}
+          <Link to="/register" className="font-semibold text-primary transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring rounded-sm">Registrate</Link>
+        </p>
       </div>
     </div>
   )

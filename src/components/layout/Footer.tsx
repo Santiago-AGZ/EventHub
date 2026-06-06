@@ -1,63 +1,57 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, Mail, Code, Heart } from 'lucide-react'
+import { Calendar, Mail, ExternalLink } from 'lucide-react'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-slate-900 text-white mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          
-          {/* Brand */}
+    <footer className="mt-20 border-t border-border bg-card">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
+
           <div className="md:col-span-1">
-            <Link to="/" className="flex items-center gap-2.5 mb-4">
-              <div className="bg-primary p-2 rounded-xl">
+            <Link to="/" className="mb-4 flex items-center gap-2.5 rounded focus-visible:ring-2 focus-visible:ring-ring">
+              <div className="rounded-xl bg-primary p-2 text-primary-foreground">
                 <Calendar size={20} />
               </div>
-              <span className="text-2xl font-extrabold tracking-tight">EventHub</span>
+              <span className="text-2xl font-extrabold tracking-tight text-foreground">EventHub</span>
             </Link>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="max-w-[65ch] text-sm leading-relaxed text-muted-foreground">
               La plataforma centralizada de eventos universitarios. Descubre, crea y participa.
             </p>
           </div>
 
-          {/* Plataforma */}
           <div>
-            <h3 className="font-bold text-sm uppercase tracking-widest text-slate-300 mb-4">Plataforma</h3>
-            <ul className="space-y-2.5 text-slate-400 text-sm">
-              <li><Link to="/" className="hover:text-white transition-colors">Inicio</Link></li>
-              <li><Link to="/eventos" className="hover:text-white transition-colors">Explorar Eventos</Link></li>
-              <li><Link to="/crear-evento" className="hover:text-white transition-colors">Crear Evento</Link></li>
-              <li><Link to="/mis-inscripciones" className="hover:text-white transition-colors">Mis Inscripciones</Link></li>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-muted-foreground">Plataforma</h3>
+            <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
+              <li><Link to="/" className="rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">Inicio</Link></li>
+              <li><Link to="/eventos" className="rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">Explorar Eventos</Link></li>
+              <li><Link to="/crear-evento" className="rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">Crear Evento</Link></li>
+              <li><Link to="/mis-inscripciones" className="rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">Mis Inscripciónes</Link></li>
             </ul>
           </div>
 
-          {/* Categorías */}
           <div>
-            <h3 className="font-bold text-sm uppercase tracking-widest text-slate-300 mb-4">Categorías</h3>
-            <ul className="space-y-2.5 text-slate-400 text-sm">
-              <li><Link to="/eventos?cat=Tecnología" className="hover:text-white transition-colors">⚙️ Tecnología</Link></li>
-              <li><Link to="/eventos?cat=Educación" className="hover:text-white transition-colors">📚 Educación</Link></li>
-              <li><Link to="/eventos?cat=Deportes" className="hover:text-white transition-colors">⚽ Deportes</Link></li>
-              <li><Link to="/eventos?cat=Música" className="hover:text-white transition-colors">🎵 Música</Link></li>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-muted-foreground">Recursos</h3>
+            <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
+              <li><Link to="/contacto" className="rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">FAQ</Link></li>
+              <li><Link to="/contacto" className="rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">Ayuda</Link></li>
+              <li><span className="text-muted-foreground">Privacidad</span></li>
             </ul>
           </div>
 
-          {/* Contacto */}
           <div>
-            <h3 className="font-bold text-sm uppercase tracking-widest text-slate-300 mb-4">Contacto</h3>
-            <ul className="space-y-2.5 text-slate-400 text-sm">
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-muted-foreground">Contacto</h3>
+            <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
               <li>
-                <Link to="/contacto" className="flex items-center gap-2 hover:text-white transition-colors">
+                <Link to="/contacto" className="flex items-center gap-2 rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
                   <Mail size={14} />
                   Enviar mensaje
                 </Link>
               </li>
               <li>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors">
-                  <Code size={14} />
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+                  <ExternalLink size={14} />
                   Repositorio GitHub
                 </a>
               </li>
@@ -65,11 +59,9 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-slate-800 mt-10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-sm">
-          <p>© {currentYear} EventHub. Todos los derechos reservados.</p>
-          <p className="flex items-center gap-1.5">
-            Hecho con <Heart size={13} className="text-red-400 fill-red-400" /> para la comunidad universitaria
-          </p>
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-sm text-muted-foreground sm:flex-row">
+          <p>&copy; {currentYear} EventHub. Todos los derechos reservados.</p>
+          <p>Para la comunidad universitaria</p>
         </div>
       </div>
     </footer>

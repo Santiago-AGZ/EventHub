@@ -15,7 +15,7 @@ createRoot(document.getElementById('root')!).render(
         closeButton
         toastOptions={{
           style: {
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: "'Geist', sans-serif",
             borderRadius: '12px',
           },
         }}
