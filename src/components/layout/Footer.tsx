@@ -14,7 +14,7 @@ export function Footer() {
               <div className="rounded-xl bg-primary p-2 text-primary-foreground">
                 <Calendar size={20} />
               </div>
-              <span className="text-2xl font-extrabold tracking-tight text-foreground">EventHub</span>
+              <span className="text-2xl font-extrabold tracking-tight text-foreground">Evora</span>
             </Link>
             <p className="max-w-[65ch] text-sm leading-relaxed text-muted-foreground">
               La plataforma centralizada de eventos universitarios. Descubre, crea y participa.
@@ -50,7 +50,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+                <a href="https://github.com/Santiago-AGZ/EventHub.git" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
                   <ExternalLink size={14} />
                   Repositorio GitHub
                 </a>
@@ -60,7 +60,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-sm text-muted-foreground sm:flex-row">
-          <p>&copy; {currentYear} EventHub. Todos los derechos reservados.</p>
+          <p>&copy; {currentYear} Evora. Todos los derechos reservados.</p>
           <p>Para la comunidad universitaria</p>
         </div>
       </div>

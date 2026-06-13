@@ -92,7 +92,7 @@ export function Navbar() {
           <div className="flex items-center justify-center rounded-xl bg-primary p-2 text-primary-foreground shadow-md">
             <Calendar size={22} />
           </div>
-          <span className="text-2xl font-black tracking-tight">EventHub</span>
+          <span className="text-2xl font-black tracking-tight">Evora</span>
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex" aria-label="Navegacion principal">

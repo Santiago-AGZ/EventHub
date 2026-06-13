@@ -182,7 +182,7 @@ export function Home() {
       <section className="border-t border-border bg-card px-4 py-20" aria-labelledby="features-heading">
         <div className="mx-auto max-w-6xl">
           <div className="mb-14 text-center">
-            <p className="animate-fade-in-up mb-2 text-sm font-bold uppercase tracking-widest text-primary" style={{ animationDelay: '0ms' }}>Por que EventHub?</p>
+            <p className="animate-fade-in-up mb-2 text-sm font-bold uppercase tracking-widest text-primary" style={{ animationDelay: '0ms' }}>Por que Evora?</p>
             <h2 id="features-heading" className="animate-fade-in-up text-3xl font-extrabold sm:text-4xl" style={{ animationDelay: '80ms' }}>La Forma Mas Inteligente de Vivir tu Universidad</h2>
             <p className="animate-fade-in-up mx-auto mt-4 max-w-[65ch] text-muted-foreground" style={{ animationDelay: '160ms' }}>
               Todo lo que necesitas saber esta aqui, sin dispersion de informacion.
@@ -258,7 +258,7 @@ export function Home() {
           <div className="animate-stagger grid grid-cols-1 gap-6 md:grid-cols-2">
             <Card className="card-hover active:scale-[0.96] border-destructive/30 bg-destructive/5 p-6">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-extrabold text-destructive">
-                <XCircle size={20} /> Sin EventHub
+                <XCircle size={20} /> Sin Evora
               </h3>
               <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
                 {['Revisar 4 apps diferentes', 'Inscripción por correo (5+ minutos)', 'Perder eventos por no enterarse', 'Excel para gestionar inscritos', 'Confirmaciones perdidas en el correo'].map((item) => (
@@ -271,7 +271,7 @@ export function Home() {
 
             <Card className="card-hover active:scale-[0.96] border-primary/30 bg-primary/5 p-6">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-extrabold text-primary">
-                <CheckCircle2 size={20} /> Con EventHub
+                <CheckCircle2 size={20} /> Con Evora
               </h3>
               <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
                 {['1 sola plataforma para todo', 'Inscripción en 1 click (30 segundos)', 'Catálogo siempre actualizado', 'Dashboard automatico de inscritos', 'Panel "Mis Inscripciónes" centralizado'].map((item) => (
@@ -290,7 +290,7 @@ export function Home() {
           <div className="mx-auto max-w-2xl">
             <h2 className="animate-fade-in-up mb-4 text-3xl font-extrabold sm:text-4xl" style={{ animationDelay: '0ms' }}>Listo para No Perderte Mas Nada?</h2>
             <p className="animate-fade-in-up mx-auto mb-8 max-w-[65ch] text-lg text-muted-foreground" style={{ animationDelay: '150ms' }}>
-              Unete a los estudiantes que ya estan aprovechando al maximo su vida universitaria con EventHub.
+              Unete a los estudiantes que ya estan aprovechando al maximo su vida universitaria con Evora.
             </p>
             <div className="animate-fade-in-up flex flex-col justify-center gap-4 sm:flex-row" style={{ animationDelay: '300ms' }}>
               <Button size="lg" className="btn-press" onClick={() => navigate('/register')}>Crear Cuenta Gratis</Button>

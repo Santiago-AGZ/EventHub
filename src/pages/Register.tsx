@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Calendar, Mail, Lock, User, ArrowRight } from 'lucide-react'
+import { Calendar, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,6 +40,8 @@ export function Register() {
   const navigate = useNavigate()
   const { register: registerUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {
     register,
@@ -81,7 +83,7 @@ export function Register() {
           <div className="animate-float mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <Calendar size={28} />
           </div>
-          <h1 className="animate-fade-in-up text-3xl font-extrabold tracking-tight" style={{ animationDelay: '0ms' }}>EventHub</h1>
+          <h1 className="animate-fade-in-up text-3xl font-extrabold tracking-tight" style={{ animationDelay: '0ms' }}>Evora</h1>
           <p className="animate-fade-in-up mt-2 text-muted-foreground" style={{ animationDelay: '100ms' }}>Crea tu cuenta y empieza a descubrir eventos</p>
         </div>
 
@@ -116,7 +118,10 @@ export function Register() {
                 <label htmlFor="password" className="mb-1.5 block text-sm font-medium">Contraseña</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="password" type="password" className="pl-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="Minimo 6 caracteres" aria-invalid={!!errors.password} aria-describedby={errors.password ? 'password-error' : undefined} {...register('password')} />
+                  <Input id="password" type={showPassword ? "text" : "password"} className="pl-10 pr-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="Minimo 6 caracteres" aria-invalid={!!errors.password} aria-describedby={errors.password ? 'password-error' : undefined} {...register('password')} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} tabIndex={-1}>
+                    {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </button>
                 </div>
                 {errors.password && (
                   <p id="password-error" className="mt-1 text-sm text-destructive" role="alert">{errors.password.message}</p>
@@ -126,7 +131,10 @@ export function Register() {
                 <label htmlFor="confirmPassword" className="mb-1.5 block text-sm font-medium">Confirmar Contraseña</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="confirmPassword" type="password" className="pl-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="Repite tu contraseña" aria-invalid={!!errors.confirmPassword} aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined} {...register('confirmPassword')} />
+                  <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} className="pl-10 pr-10 transition-shadow duration-300 focus:shadow-md focus:shadow-primary/5" placeholder="Repite tu contraseña" aria-invalid={!!errors.confirmPassword} aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined} {...register('confirmPassword')} />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"} tabIndex={-1}>
+                    {showConfirmPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </button>
                 </div>
                 {errors.confirmPassword && (
                   <p id="confirm-password-error" className="mt-1 text-sm text-destructive" role="alert">{errors.confirmPassword.message}</p>
