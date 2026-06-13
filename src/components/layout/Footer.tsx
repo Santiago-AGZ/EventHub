@@ -50,7 +50,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+                <a href="https://github.com/Santiago-AGZ/EventHub" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
                   <ExternalLink size={14} />
                   Repositorio GitHub
                 </a>

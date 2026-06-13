@@ -77,7 +77,7 @@ export function Contact() {
               <div>
                 <h2 className="font-semibold text-foreground">GitHub</h2>
                 <p className="text-sm text-muted-foreground">
-                  <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="rounded-sm hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Repositorio del proyecto</a>
+                  <a href="https://github.com/Santiago-AGZ/EventHub" target="_blank" rel="noopener noreferrer" className="rounded-sm hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Repositorio del proyecto</a>
                 </p>
               </div>
             </CardContent>

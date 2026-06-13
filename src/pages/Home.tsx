@@ -81,7 +81,7 @@ export function Home() {
                   >
                     <img
                       src={evento.imagenes[0]?.url || evento.imagen_url || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800'}
-                      alt=""
+                      alt={evento.titulo}
                       className="size-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
